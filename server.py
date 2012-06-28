@@ -42,10 +42,11 @@ def logs():
 
 
 def main():
+    # For testing the output of the functions.
     print 'Checking for connected users and their IPs.'
     print users_and_IPs()
     print 'Checking for active files (downloads, uploads).'
-    print active_files(user='sths')
+    print active_files()
 
 
 if __name__ == '__main__':
