@@ -20,7 +20,7 @@ def users_and_IPs():
 
 def active_files(directory='/run/media/', user=False):
     '''Find which files are active (being downloaded or uploaded) and by
-    who.'''
+    who. Requires sudo privileges.'''
     # The command is "lsof -w | grep $directory [| grep $user]".
     p1 = Popen(['lsof', '-w'], stdout=PIPE)
     p2 = Popen(['grep', directory], stdin=p1.stdout, stdout=PIPE)
