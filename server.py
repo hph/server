@@ -11,9 +11,12 @@ def users_and_IPs():
     p1 = Popen(['netstat', '-nutp'], stdout=PIPE)
     p2 = Popen(['grep', 'sshd'], stdin=p1.stdout, stdout=PIPE)
     output = p2.communicate()[0]
+    if not output:
+        return
     output = output[:-1].split('\n')
     output = [out.split() for out in output]
-    output = [(out[7], out[4].split(':')[0]) for out in output]
+    if len(output) > 0:
+        output = [(out[7], out[4].split(':')[0]) for out in output]
     # Remove duplicate user-IP tuples.
     return sorted(set(output))
 
@@ -29,10 +32,19 @@ def active_files(directory='/run/media/', user=False):
         output = p3.communicate()[0]
     else:
         output = p2.communicate()[0]
+    if not output:
+        return
     output = output[:-1].split('\n')
     split_output = [out.split() for out in output]
     users = [out[2] for out in split_output]
     files = [out.split('/run/media/haukur')[1] for out in output]
+    # Ugly but necessary to remove PIDs (they're numbers) from the user list.
+    for _ in xrange(len(users) * 2):
+        for i, user in enumerate(users):
+            if user.isdigit():
+                users.remove(user)
+                # Necessary to zip the correct users and files together.
+                files.pop(i)
     return zip(users, files)
 
 
