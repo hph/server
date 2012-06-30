@@ -61,6 +61,7 @@ def main():
     # chcon -R -v -t httpd_sys_rw_content_t file.jpg
     # TODO Fix code so that it only downloads data and images when required,
     # and fix exceptions, such as those of City of God and American History X.
+    # NOTE Useful command: sed -i 's/to_replace/to_replace_with/g' filename
     start = ['<!DOCTYPE html>', '<html>', '<body>'] 
     a = ['<center><p><em>a:</em></p>']
     a.append(generate_html(get_movie_list('/run/media/haukur/a/movies')))
