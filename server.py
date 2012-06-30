@@ -3,6 +3,7 @@
 
 from os import popen
 from subprocess import Popen, PIPE
+from sys import argv
 from time import sleep
 
 
@@ -48,21 +49,6 @@ def active_files(directory='/run/media/', user=False):
                 # Necessary to zip the correct users and files together.
                 files.pop(i)
     return zip(users, files)
-
-
-def watch():
-    '''Watch for connections and list active files.'''
-    while True:
-        print 'Active users:'
-        users = users_and_IPs()
-        if users:
-            for user, ip in users:
-                print '%s (%s)' % user, ip
-        active = active_files()
-        if active:
-            for user, file in active:
-                print '%s -- %s' % user, file
-        sleep(1)
 
 
 def get_size():
@@ -116,7 +102,14 @@ def log():
 
 
 def main():
-    watch()
+    # The program requires sudo privileges. Pass a custom terminal width as an
+    # argument if it is not 80. You can also run this program with the UNIX
+    # program "watch", i.e. "sudo watch python server.py".
+    if len(argv) > 1:
+        term_width = argv[1]
+    else:
+        term_width = 80
+    watch(term_width)
 
 
 if __name__ == '__main__':
