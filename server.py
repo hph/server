@@ -105,11 +105,16 @@ def watch(term_width):
     active = active_files()
     if active:
         max_len = max([len(user[0]) for user in active])
-        title = '\nUsers:  '
+        if users:
+            title = '\nUsers:  '
+        else:
+            title = 'Users:   '
         while len(title) < max_len + 2:
             title += ' '
         to_print.append('%sActive files:' % title)
         title_len = len(title[1:])
+        if not users:
+            title_len += 1
         for file in active:
             to_print.append('%s%s' % (file[0].ljust(title_len), file[1]))
     spl = lambda a, b: [a[i:i + b] for i in xrange(0, len(a), b)]
