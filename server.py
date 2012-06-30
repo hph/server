@@ -5,6 +5,7 @@ from os import popen
 from subprocess import Popen, PIPE
 from sys import argv
 from time import sleep
+from urllib import urlopen
 
 
 def users_and_IPs():
@@ -51,6 +52,24 @@ def active_files(directory='/run/media/', user=False):
     return zip(users, files)
 
 
+def get_country_from_IP(IP):
+    '''Return the country of the IP.'''
+    try:
+        # API available at "https://github.com/appliedsec/pygeoip".
+        # Also requires "GeoAPI.dat" to be in the same folder as server.py,
+        # available at: "http://www.maxmind.com/app/geolite". 
+        # This API claims to be 99.5% accurate.
+        from pygeoip import GeoIP
+
+        gi = pygeoip.GeoIP('GeoIP.dat', pygeoip.MEMORY_CACHE)
+        return gi.country_code_by_addr(str(IP))
+    except:
+        # This API is not completely accurate but allows for manual corrections
+        # at their website.
+        site = 'http://api.hostip.info/country.php?ip='
+        return urlopen(site + str(IP)).read()
+
+
 def get_size():
     '''Get the size of the terminal window.'''
     # XXX Temporary hack - do it with subprocess instead.
@@ -64,6 +83,10 @@ def watch(term_width):
     '''Temporary function to print a list of users, their IPs and users and
     active files.'''
     to_print = []
+    alarms = []
+    allowed = ['ek', 'ej', 'dev', 'shp', 'gj', 'sths', 'jas', 'gks', 'thth',
+               'jat', 'zhp', 'hi']
+    IPs = []
     users = users_and_IPs()
     if users:
         max_len = max([len(user[0]) for user in users])
@@ -74,6 +97,11 @@ def watch(term_width):
         title_len = len(title)
         for user in users:
             to_print.append('%s%s' % (user[0].ljust(title_len), user[1]))
+            if user[0] not in allowed or user[1] not in IPs:
+                if user[1] not in IPs:
+                    IPs.append(user[1])
+                IP = get_country_from_IP(user[1])
+                alarms.append((user[0], user[1], IP))
     active = active_files()
     if active:
         max_len = max([len(user[0]) for user in active])
@@ -94,6 +122,10 @@ def watch(term_width):
         if len(line) > 1:
             for line in line[1:]:
                 print title_len * ' ' + line
+    if alarms:
+        print '\nALARMS:'
+        for alarm in alarms:
+            print 'User "%s" (from %s) does not exist!' % (alarm[0], alarm[2])
 
 
 def log():
