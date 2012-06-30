@@ -29,6 +29,9 @@ def generate_html(movies):
     '''Generate html code that lists movies and information about them.'''
     # TODO Clean and restructure - this function should only generate and
     # return html code, not retrieve it.
+    # Also generate a fiew plaintext files.
+    # Restructure code so that anyone can use it to create a html file for
+    # themselves.
     lines = []
     errors = []
     for movie in movies:
