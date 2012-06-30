@@ -87,6 +87,7 @@ def watch(term_width):
     allowed = ['ek', 'ej', 'dev', 'shp', 'gj', 'sths', 'jas', 'gks', 'thth',
                'jat', 'zhp', 'hi']
     IPs = []
+    countries = {}
     users = users_and_IPs()
     if users:
         max_len = max([len(user[0]) for user in users])
@@ -96,12 +97,15 @@ def watch(term_width):
         to_print.append('%sIP addresses:' % title)
         title_len = len(title)
         for user in users:
-            to_print.append('%s%s' % (user[0].ljust(title_len), user[1]))
             if user[0] not in allowed or user[1] not in IPs:
                 if user[1] not in IPs:
                     IPs.append(user[1])
                 IP = get_country_from_IP(user[1])
-                alarms.append((user[0], user[1], IP))
+                country = get_country(IP)
+                countries[IP] = country
+                alarms.append((user[0], user[1], countries[IP]))
+            to_print.append('%s%s' % (user[0].ljust(title_len),
+                            user[1] + ' (%s)' % countries[IP]))
     active = active_files()
     if active:
         max_len = max([len(user[0]) for user in active])
@@ -130,7 +134,20 @@ def watch(term_width):
     if alarms:
         print '\nALARMS:'
         for alarm in alarms:
-            print 'User "%s" (from %s) does not exist!' % (alarm[0], alarm[2])
+            print 'User "%s" (%s) does not exist!' % (alarm[0], alarm[2])
+
+
+def get_country(country_code):
+    '''Scan countrycodes.txt and return a list of countries and country
+    codes.'''
+    countrycodes = {}
+    with open('countrycodes.txt', 'r') as file:
+        for line in file:
+            data = line.split()
+            code = data[-3]
+            country = ' '.join(data[:-3]).title()
+            countrycodes[code] = country
+    return countrycodes[country_code]
 
 
 def log():
