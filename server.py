@@ -60,7 +60,7 @@ def get_size():
     return int(rows), int(columns)
 
 
-def watch(term_width=80):
+def watch(term_width):
     '''Temporary function to print a list of users, their IPs and users and
     active files.'''
     to_print = []
