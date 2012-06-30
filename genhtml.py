@@ -49,6 +49,7 @@ def generate_html(movies):
             errors.append(('data error', movie))
         print 'Working ... %s' % title
         url = 'http://imdb.com/title/%s' % id
+        # TODO Make the image a link and remove the link above it?
         line = '<h2><a href="%s" target="_blank">%s</a></h2><br>' % url, title
         lines.append(line)
         if title == 'American History X':
@@ -66,18 +67,23 @@ def main():
     # NOTE For images to work they must not contain ":" in the name and
     # permissions may have to be set with the command:
     # chcon -R -v -t httpd_sys_rw_content_t file.jpg
+    # Another useful command (search and replace): 
+    # sed -i 's/search/replace/g' filename
     # TODO Fix code so that it only downloads data and images when required,
     # and fix exceptions, such as those of City of God and American History X.
-    # NOTE Useful command: sed -i 's/to_replace/to_replace_with/g' filename
     # TODO Add more information from imdbapi AND local, such as filesize,
     # subtitles available, resolution, etc.
     # TODO Add "expected soon" section from temp downloads folder.
-    start = ['<!DOCTYPE html>', '<html>', '<body>'] 
-    a = ['<center><p><em>a:</em></p>']
+    start = ['<!DOCTYPE html>', '<html>', '<head>', '<style', 'body {',
+             'background: #cfcfcf;',
+             'background-image: url("back1.jpg), url("back2.jpg");',
+             'background-repeat: repeat-x, repeat;', '}', '</style>',
+             '</head>', '<body>', '<center>'] 
+    a = ['<p><h1>Myndir á harða disk <em>a</em></h1></p>']
     a.append(generate_html(get_movie_list('/run/media/haukur/a/movies')))
-    b = ['<p><em>b:</em></p>']
+    a = ['<p><h1>Myndir á harða disk <em>b</em></h1></p>']
     b.append(generate_html(get_movie_list('/run/media/haukur/b/movies')))
-    end = ['</center></body>', '</html>']
+    end = ['</center>', '</body>', '</html>']
     # NOTE A temporary file for testing purposes can easily be specified here.
     with open('/var/www/html/index.html', 'w') as index:
         index.write('\n'.join(start + a + b + end))
