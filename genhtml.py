@@ -14,6 +14,24 @@ def get_movie_list(folder):
     return folders.split('\n')[:-1]
 
 
+def size_list(path):
+    '''List the items in a folder, using du.'''
+    items = subprocess.check_output('du -sh %s*' % path, shell=True)
+    items = items.split('\n')[:-1]
+    movies = []
+    for item in items:
+        size_file = item.split('\t')
+        size_file[1] = size_file[1].split('/')
+        movies.append((size_file[0], size_file[1][-1]))
+    total_size = 0
+    for size, _ in movies:
+        if size[-1] == 'M':
+            total_size += float(size[:-1]) * 0.001
+        else:
+            total_size += float(size[:-1])
+    return movies, int(total_size)
+
+
 def imdbapi(movie):
     '''Download the available data at imdbapi.com.'''
     url = 'http://www.imdbapi.com/?t=%s' % movie
@@ -71,6 +89,19 @@ def generate_html(movies):
     return '\n'.join(lines)
 
 
+def plaintext():
+    '''Generate a plaintext list over the films in the two drives.'''
+    with open('/var/www/html/listi', 'w') as listi:
+        movies = size_list('/run/media/haukur/a/movies/')
+        listi.write('Drive a (%i G):\n' % movies[1])
+        for size, movie in movies[0]:
+            listi.write('%s\t%s\n' % (size, movie))
+        movies = size_list('/run/media/haukur/b/movies/')
+        listi.write('Drive b (%i G):\n' % movies[1])
+        for size, movie in movies[0]:
+            listi.write('%s\t%s\n' % (size, movie))
+
+
 def main():
     # NOTE For images to work they must not contain ":" in the name and
     # permissions may have to be set with the command:
@@ -95,6 +126,7 @@ def main():
     # NOTE A temporary file for testing purposes can easily be specified here.
     with open('/var/www/html/index.html', 'w') as index:
         index.write('\n'.join(start + a + b + c + end))
+    plaintext()
 
 
 if __name__ == '__main__':
