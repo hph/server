@@ -25,6 +25,14 @@ def get_cover(movie, url):
     return urllib.urlretrieve(url, movie.replace('/', ':') + '.jpg')
 
 
+def fix_name(filename):
+    '''Fix filenames so that the files can be used.'''
+    #filename = filename.replace(' -', ':')
+    special = ' -+,.!'
+    allowed = string.lowercase + string.uppercase + string.digits + special
+    return ''.join([char for char in filename if char in allowed])
+
+
 def generate_html(movies):
     '''Generate html code that lists movies and information about them.'''
     # TODO Clean and restructure - this function should only generate and
@@ -32,37 +40,34 @@ def generate_html(movies):
     # Also generate a fiew plaintext files.
     # Restructure code so that anyone can use it to create a html file for
     # themselves.
+    # XXX Use the folder name for the movie name in the HTML.
+    # TODO Do not scan existing titles.
     lines = []
     errors = []
     for movie in movies:
         data = imdbapi(movie)
         try:
-            title = data['Title']
+            title = fix_name(data['Title'])
+            jpg = title
             id = data['imdbID']
             if data['Poster'] != 'N/A':
-                if not os.path.isfile(title.replace('/', '-')):
-                    get_cover(title, data['Poster'])
-                    # TODO Check if the download succeeded, if not, prompt the
-                    # user to specify a url.
+                if not os.path.isfile(jpg):
+                    get_cover(jpg, data['Poster'])
             else:
                 errors.append(('cover error', movie))
         except KeyError:
             title = movie
             id = raw_input('Enter an id for %s: ' % title)
             errors.append(('data error', movie))
-        print 'Working ... %s' % title
+        print 'Working ... %s' % movie
         url = 'http://imdb.com/title/%s' % id
         # TODO Make the image a link and remove the link above it?
-        line = '<h2><a href="%s" target="_blank">%s</a></h2><br>' % url, title
+        src = jpg + '.jpg'
+        line = '<a href="%s" target="_blank"><img src="%s" ' % (url, src)
+        line += 'border="0" height="470" width="317"></a>'
         lines.append(line)
-        if title == 'American History X':
-            src = title + '.jpg'
-            line = '<img border="0" src="%s" height="317"><br>' % src
-        else:
-            src = title.replace('/', '-') + '.jpg'
-            line = '<img border="0" src="%s" height="317"><br>' % src
-        lines.append(line)
-    print errors
+    if errors:
+        print errors
     return '\n'.join(lines)
 
 
@@ -77,19 +82,19 @@ def main():
     # TODO Add more information from imdbapi AND local, such as filesize,
     # subtitles available, resolution, etc.
     # TODO Add "expected soon" section from temp downloads folder.
-    start = ['<!DOCTYPE html>', '<html>', '<head>', '<style', 'body {',
-             'background: #cfcfcf;',
-             'background-image: url("back1.jpg), url("back2.jpg");',
-             'background-repeat: repeat-x, repeat;', '}', '</style>',
-             '</head>', '<body>', '<center>'] 
-    a = ['<p><h1>Myndir á harða disk <em>a</em></h1></p>']
+    start = ['<!DOCTYPE html>', '<html>', '<body>', '<center>']
+    a = ['<p><h1>Kvikmyndir <em>a</em></h1></p>']
     a.append(generate_html(get_movie_list('/run/media/haukur/a/movies')))
-    a = ['<p><h1>Myndir á harða disk <em>b</em></h1></p>']
+    b = ['<p><h1>Kvikmyndir <em>b</em></h1></p>']
     b.append(generate_html(get_movie_list('/run/media/haukur/b/movies')))
+    c = ['<br><br><p>Kvikmyndum er raðað eftir staðsetningu og svo eftir '
+         + 'stafrófsröð.<br>Með því að smella á mynd má komast inn á IMDb '
+         + 'síðu viðkomandi myndar.</p><p><a href="http://hph.no-ip.org/listi"'
+         + '>Listi</a> á textaformi.</p>']
     end = ['</center>', '</body>', '</html>']
     # NOTE A temporary file for testing purposes can easily be specified here.
     with open('/var/www/html/index.html', 'w') as index:
-        index.write('\n'.join(start + a + b + end))
+        index.write('\n'.join(start + a + b + c + end))
 
 
 if __name__ == '__main__':
