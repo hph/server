@@ -1,9 +1,9 @@
 #/usr/bin/python
 #coding=utf8
 
-from os import popen
+import os
+import sys
 from subprocess import Popen, PIPE
-from sys import argv
 from time import sleep
 from urllib import urlopen
 
@@ -75,7 +75,7 @@ def get_size():
     # XXX Temporary hack - do it with subprocess instead.
     # Also, doesn't work with the "watch" program (the program, not the
     # function) which makes it useless.
-    rows, columns = popen('stty size > /dev/null', 'r').read().split()
+    rows, columns = os.popen('stty size > /dev/null', 'r').read().split()
     return int(rows), int(columns)
 
 
@@ -150,6 +150,17 @@ def get_country(country_code):
     return countrycodes[country_code]
 
 
+def authenticate():
+    '''Prompt the user for the superuser password if required.'''
+    # The euid (effective user id) of the superuser is 0.
+    euid = os.geteuid()
+    if euid != 0:
+        args = ['sudo', sys.executable] + sys.argv[:] + [os.environ]
+        # Replaces the current running process with the sudo authentication.
+        os.execlpe('sudo', *args)
+    return True
+
+
 def log():
     '''Read /var/log/secure for ssh logs.'''
     pass
@@ -159,8 +170,9 @@ def main():
     # The program requires sudo privileges. Pass a custom terminal width as an
     # argument if it is not 80. You can also run this program with the UNIX
     # program "watch", i.e. "sudo watch python server.py".
-    if len(argv) > 1:
-        term_width = argv[1]
+    authenticate()
+    if len(sys.argv) > 1:
+        term_width = sys.argv[1]
     else:
         term_width = 80
     watch(term_width)
