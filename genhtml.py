@@ -51,6 +51,12 @@ def fix_name(filename):
     return ''.join([char for char in filename if char in allowed])
 
 
+def fix_errors():
+    '''Fix known errors.'''
+    path = '/var/www/backup/'
+    subprocess.call('cp %s*.jpg .' % path, shell=True)
+
+
 def generate_html(movies):
     '''Generate html code that lists movies and information about them.'''
     # TODO Clean and restructure - this function should only generate and
@@ -75,14 +81,19 @@ def generate_html(movies):
                 errors.append(('cover error', movie))
         except KeyError:
             title = movie
-            id = raw_input('Enter an id for %s: ' % title)
-            errors.append(('data error', movie))
+            jpg = title
+            # For some reason the imdbapi find this film.
+            if title = 'City of God':
+                id = 'tt0317248'
+            else:
+                id = raw_input('Enter an id for %s: ' % title)
+                errors.append(('data error', movie))
         print 'Working ... %s' % movie
         url = 'http://imdb.com/title/%s' % id
         # TODO Make the image a link and remove the link above it?
         src = jpg + '.jpg'
         line = '<a href="%s" target="_blank"><img src="%s" ' % (url, src)
-        line += 'border="0" height="470" width="317"></a>'
+        line += 'border="0" height="317" width="214"></a>'
         lines.append(line)
     if errors:
         print errors
@@ -126,6 +137,7 @@ def main():
     # NOTE A temporary file for testing purposes can easily be specified here.
     with open('/var/www/html/index.html', 'w') as index:
         index.write('\n'.join(start + a + b + c + end))
+    fix_errors()
     plaintext()
 
 
