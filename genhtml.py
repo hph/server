@@ -40,6 +40,7 @@ def imdbapi(movie):
 
 def get_cover(movie, url):
     '''Download and return the cover for the movie from url.'''
+    print 'Downloading the cover of %s.' % movie
     return urllib.urlretrieve(url, movie.replace('/', ':') + '.jpg')
 
 
@@ -57,33 +58,60 @@ def fix_errors():
     subprocess.call('cp %s*.jpg .' % path, shell=True)
 
 
+def save_data(data, filename='/var/www/data'):
+    '''Save data from imdbapi.'''
+    try:
+        title = data['Title']
+        ID = data['imdbID']
+        poster = data['Poster']
+        data = (title, ID, poster)
+        with open(filename, 'a') as file:
+            file.write('%s\t%s\t%s\n' % (title, ID, poster))
+    except (KeyError, TypeError) as error:
+        # Do something? Example: City of God. See lines 116-124.
+        return
+    return data
+
+
+def get_data(movie, filename='/var/www/data'):
+    '''Get the movie url if it exists.'''
+    data = []
+    with open(filename, 'r') as file:
+        for line in file:
+            line = line.split('\t')
+            data.append(tuple(line))
+    for item in data:
+        if item[0] == movie:
+            return item
+
+
 def generate_html(movies):
     '''Generate html code that lists movies and information about them.'''
-    # TODO Clean and restructure - this function should only generate and
-    # return html code, not retrieve it.
-    # Also generate a fiew plaintext files.
-    # Restructure code so that anyone can use it to create a html file for
-    # themselves.
-    # XXX Use the folder name for the movie name in the HTML.
-    # TODO Do not scan existing titles.
     lines = []
     errors = []
     for movie in movies:
-        data = imdbapi(movie)
-        try:
-            title = fix_name(data['Title'])
+        data = get_data(movie)
+        if not data:
+            data = imdbapi(movie)
+            data = save_data(data)
+        if data:
+            title = fix_name(data[0])
+            # Get a different cover name for the Redux version.
+            if movie == 'Apocalypse Now Redux':
+                title = movie
             jpg = title
-            id = data['imdbID']
-            if data['Poster'] != 'N/A':
-                if not os.path.isfile(jpg):
-                    get_cover(jpg, data['Poster'])
-            else:
+            id = data[1]
+            try:
+                if not os.path.isfile('/var/www/html/%s.jpg' % jpg):
+                    get_cover(jpg, data[2])
+            except:
                 errors.append(('cover error', movie))
-        except KeyError:
+        # Unnecessary else clause? Doesn't really matter, remove later if so.
+        else:
             title = movie
             jpg = title
             # For some reason the imdbapi find this film.
-            if title = 'City of God':
+            if title == 'City of God':
                 id = 'tt0317248'
             else:
                 id = raw_input('Enter an id for %s: ' % title)
@@ -96,13 +124,15 @@ def generate_html(movies):
         line += 'border="0" height="317" width="214"></a>'
         lines.append(line)
     if errors:
-        print errors
+        print 'Error(s):'
+        for error in errors:
+            print '%s: %s' % (error[0], error[1])
     return '\n'.join(lines)
 
 
 def plaintext():
     '''Generate a plaintext list over the films in the two drives.'''
-    with open('/var/www/html/listi', 'w') as listi:
+    with open('/var/www/html/movies', 'w') as listi:
         movies = size_list('/run/media/haukur/a/movies/')
         listi.write('Drive a (%i G):\n' % movies[1])
         for size, movie in movies[0]:
@@ -131,8 +161,10 @@ def main():
     b.append(generate_html(get_movie_list('/run/media/haukur/b/movies')))
     c = ['<br><br><p>Kvikmyndum er raðað eftir staðsetningu og svo eftir '
          + 'stafrófsröð.<br>Með því að smella á mynd má komast inn á IMDb '
-         + 'síðu viðkomandi myndar.</p><p><a href="http://hph.no-ip.org/listi"'
-         + '>Listi</a> á textaformi.</p>']
+         + 'síðu viðkomandi myndar.</p>'
+         + '<p><a href="http://hph.no-ip.org/movies">Kvikmynda-</a>, <a '
+         + 'href="http://hph.no-ip.org/music">tónlistar-</a> og <a '
+         + 'href="http://hph.no-ip.org/books">bókalisti</a> á textaformi.</p>']
     end = ['</center>', '</body>', '</html>']
     # NOTE A temporary file for testing purposes can easily be specified here.
     with open('/var/www/html/index.html', 'w') as index:
