@@ -34,6 +34,7 @@ def size_list(path):
 
 def imdbapi(movie):
     '''Download the available data at imdbapi.com.'''
+    print 'Downloading the IMDb data of %s.' % movie
     url = 'http://www.imdbapi.com/?t=%s' % movie
     return ast.literal_eval(urllib.urlopen(url).read())
 
@@ -113,15 +114,16 @@ def generate_html(movies):
             # For some reason the imdbapi find this film.
             if title == 'City of God':
                 id = 'tt0317248'
+            elif title == 'The Conversation':
+                id = 'tt0071360'
             else:
                 id = raw_input('Enter an id for %s: ' % title)
                 errors.append(('data error', movie))
-        print 'Working ... %s' % movie
         url = 'http://imdb.com/title/%s' % id
         # TODO Make the image a link and remove the link above it?
         src = jpg + '.jpg'
         line = '<a href="%s" target="_blank"><img src="%s" ' % (url, src)
-        line += 'border="0" height="317" width="214"></a>'
+        line += 'border="0" height="211" width="143"></a>'
         lines.append(line)
     if errors:
         print 'Error(s):'
@@ -131,16 +133,24 @@ def generate_html(movies):
 
 
 def plaintext():
-    '''Generate a plaintext list over the films in the two drives.'''
+    '''Generate a plaintext lists over the films in the two drives.'''
     with open('/var/www/html/movies', 'w') as listi:
-        movies = size_list('/run/media/haukur/a/movies/')
+        movies = size_list('/media/a/movies/')
         listi.write('Drive a (%i G):\n' % movies[1])
         for size, movie in movies[0]:
             listi.write('%s\t%s\n' % (size, movie))
-        movies = size_list('/run/media/haukur/b/movies/')
+        movies = size_list('/media/b/movies/')
         listi.write('Drive b (%i G):\n' % movies[1])
         for size, movie in movies[0]:
             listi.write('%s\t%s\n' % (size, movie))
+    with open('/var/www/html/newest', 'w') as newest:
+        folders = subprocess.check_output(['ls', '-t',
+                                           '/media/a/movies'])
+        newest.write(folders)
+    with open('/var/www/html/soon', 'w') as soon:
+        path = '/media/a/temp/'
+        folders = subprocess.check_output('du -sh %s*' % path, shell=True)
+        soon.write(folders)
 
 
 def main():
@@ -156,9 +166,9 @@ def main():
     # TODO Add "expected soon" section from temp downloads folder.
     start = ['<!DOCTYPE html>', '<html>', '<body>', '<center>']
     a = ['<p><h1>Kvikmyndir <em>a</em></h1></p>']
-    a.append(generate_html(get_movie_list('/run/media/haukur/a/movies')))
+    a.append(generate_html(get_movie_list('/media/a/movies')))
     b = ['<p><h1>Kvikmyndir <em>b</em></h1></p>']
-    b.append(generate_html(get_movie_list('/run/media/haukur/b/movies')))
+    b.append(generate_html(get_movie_list('/media/b/movies')))
     c = ['<br><br><p>Kvikmyndum er raðað eftir staðsetningu og svo eftir '
          + 'stafrófsröð.<br>Með því að smella á mynd má komast inn á IMDb '
          + 'síðu viðkomandi myndar.</p>'
@@ -168,6 +178,7 @@ def main():
     end = ['</center>', '</body>', '</html>']
     # NOTE A temporary file for testing purposes can easily be specified here.
     with open('/var/www/html/index.html', 'w') as index:
+        print 'Generating HTML file.'
         index.write('\n'.join(start + a + b + c + end))
     fix_errors()
     plaintext()
