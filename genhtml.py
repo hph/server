@@ -174,7 +174,10 @@ def main():
          + 'síðu viðkomandi myndar.</p>'
          + '<p><a href="http://hph.no-ip.org/movies">Kvikmynda-</a>, <a '
          + 'href="http://hph.no-ip.org/music">tónlistar-</a> og <a '
-         + 'href="http://hph.no-ip.org/books">bókalisti</a> á textaformi.</p>']
+         + 'href="http://hph.no-ip.org/books">bókalisti</a> á textaformi.</p>'
+         + '<p> <a href="http://hph.no-ip.org/newest">Nýjustu</a> '
+         + 'kvikmyndirnar og <a href="http://hph.no-ip.org/soon">væntanlegar'
+         + '</a> kvikmyndir.</p>']
     end = ['</center>', '</body>', '</html>']
     # NOTE A temporary file for testing purposes can easily be specified here.
     with open('/var/www/html/index.html', 'w') as index:
