@@ -25,7 +25,7 @@ def users_and_IPs():
     return sorted(set(output))
 
 
-def active_files(directory='/run/media/', user=False):
+def active_files(directory='/media/', user=False):
     '''Find which files are active (being downloaded or uploaded) and by
     who. Requires sudo privileges.'''
     # The command is "lsof -w | grep $directory [| grep $user]".
@@ -41,7 +41,7 @@ def active_files(directory='/run/media/', user=False):
     output = output[:-1].split('\n')
     split_output = [out.split() for out in output]
     users = [out[2] for out in split_output]
-    files = [out.split('/run/media/haukur')[1] for out in output]
+    files = [out.split('/media')[1] for out in output]
     # Ugly but necessary to remove PIDs (they're numbers) from the user list.
     for _ in xrange(len(users) * 2):
         for i, user in enumerate(users):
@@ -100,7 +100,10 @@ def watch(term_width):
             if user[0] not in allowed or user[1] not in IPs:
                 if user[1] not in IPs:
                     IPs.append(user[1])
-                IP = get_country_from_IP(user[1])
+                try:
+                    IP = get_country_from_IP(user[1])
+                except:
+                    IP = ''
                 country = get_country(IP)
                 countries[IP] = country
                 alarms.append((user[0], user[1], countries[IP]))
@@ -147,7 +150,10 @@ def get_country(country_code):
             code = data[-3]
             country = ' '.join(data[:-3]).title()
             countrycodes[code] = country
-    return countrycodes[country_code]
+    try:
+        return countrycodes[country_code]
+    except:
+        return None
 
 
 def authenticate():
