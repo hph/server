@@ -18,7 +18,8 @@ def authenticate():
 
 
 def create_user(user):
-    '''Creates the user, passwords, sets rules and restarts the SSH daemon.'''
+    '''Creates the user, passwords, sets rules and restarts the SSH and HTTP
+    daemons.'''
     authenticate()
     calls = [('useradd -G sshers %s' % user,
               'create a new user (%s).' % user),
@@ -29,9 +30,9 @@ def create_user(user):
              ('echo "AllowUsers %s" >> /etc/ssh/sshd_config' % user,
               'set new rule to allow %s to connect via SSH or SFTP.' % user),
              ('service sshd restart',
-              'restart the SSH daemon'),
+              'restart the SSH daemon.'),
              ('service httpd restart',
-              'restart the HTTP daemon')]
+              'restart the HTTP daemon.')]
     for call, info in calls:
         print 'Attempting to %s' % info
         if not os.system(call):
@@ -46,9 +47,9 @@ def delete_user(user):
              ('rm -rf /home/%s' % user,
               'delete the %s\'s home directory.' % user),
              ('service sshd restart',
-              'restart the SSH daemon'),
+              'restart the SSH daemon.'),
              ('service httpd restart',
-              'restart the HTTP daemon')]
+              'restart the HTTP daemon.')]
     for call, info in calls:
         print 'Attempting to %s' % info
         if not os.system(call):
